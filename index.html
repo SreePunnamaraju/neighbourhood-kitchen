@@ -2,143 +2,181 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>The Neighbourhood Kitchen by Zostel</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Neighbourhood Kitchen Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; background: #fcf9ec; padding: 24px; }
-    h1 { color: #765c3d; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 32px;}
-    th, td { padding: 10px; border-bottom: 1px solid #e1c7a7; text-align: left;}
-    th { background: #a98567; color: #fff; }
-    .veg { background: #def7c6; }
-    .non-veg { background: #ffe2e0; }
-    .egg { background: #fff8c6; }
-    #orderSummary { background: #fff7e6; padding: 16px; border-radius: 7px; }
-    button { padding: 6px 17px; border-radius: 4px; border: none; background: #a98567; color: #fff; font-weight: bold; margin-top: 6px; }
-    button:disabled { background: #ddd; color: #aaa;}
-    @media (max-width:600px) {
-      body { padding: 3vw; }
-      th, td { font-size: 14px; padding: 7px; }
-      h1 { font-size: 1.2em; }
-    }
+    body {margin:0;font-family: Arial, sans-serif; background:#fcf9ec;}
+    .sticky-nav{position:sticky;top:0;background:#fff;z-index:9;border-bottom:2px solid #e1c7a7;padding:10px 0;display:flex;flex-wrap:wrap;justify-content:center;}
+    .cat-btn{margin:5px 9px;background:#a98567;color:#fff;border-radius:18px;border:none;padding:8px 16px;font-weight:500;cursor:pointer;}
+    .cat-btn.active{background:#d4b07a;}
+    h1{text-align:center;color:#765c3d;margin:10px 0 8px 0;}
+    .items-list{max-width:520px;margin:0 auto 85px;max-height:62vh;overflow-y:auto;}
+    .item-card{background:#fff;border-radius:7px;margin:13px 9px;padding:14px;box-shadow:0 1px 8px #eee;display:flex;justify-content:space-between;align-items:center;}
+    .veg{border-left:6px solid #7dda78;}
+    .non-veg{border-left:6px solid #ffb2b2;}
+    .egg{border-left:6px solid #ffe073;}
+    .add-btn{background:#a98567;color:#fff;border:none;border-radius:7px;padding:7px 19px;font-weight:600;cursor:pointer;}
+    .cart-bar{background:#fff7e6;position:fixed;left:0;right:0;bottom:0;padding:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 -1px 9px #e7d5a9;z-index:10;}
+    .cart-bar.hidden{display:none;}
+    .cart-items-summary{font-weight:500;}
+    .modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:99;}
+    .modal{background:#fff;max-width:420px;margin:12vh auto 0;padding:25px 17px 18px 17px;border-radius:11px;box-shadow:0 3px 28px #cfa9693b;}
+    .modal-title{font-weight:bold;font-size:1.13em;margin-bottom:8px;}
+    .order-list{margin:10px 0 15px 0;font-size:1em;}
+    .modal-btn{background:#b68f3b;color:#fff;border:none;border-radius:7px;padding:11px 20px;margin:0 7px 0 0;font-size:1em;font-weight:600;}
+    .modal-btn.secondary{background:#c6c6c6;color:#333;}
+    input[type=text]{padding:8px;width:97%;margin:13px 0 0 0;border-radius:5px;border:1px solid #c7b49f;}
+    @media(max-width:460px){.item-card{margin:10px 3px;}.modal{max-width:99vw;}.cart-bar{padding:8px;font-size:0.96em;}.items-list{max-width:99vw;}}
   </style>
 </head>
 <body>
-<h1>The Neighbourhood Kitchen by Zostel</h1>
-<table id="menu"></table>
-<div id="orderSummary">
-  <h3>Order Summary</h3>
-  <div id="cart"></div>
-  <div id="bill">Total: ₹0</div>
-  <button onclick="placeOrder()" id="placeOrderBtn" disabled>Place Order</button>
+<h1>The Neighbourhood Kitchen</h1>
+<div class="sticky-nav" id="catNav"></div>
+<div class="items-list" id="itemsList"></div>
+<div class="cart-bar hidden" id="cartBar" onclick="showCartModal()">
+  <span class="cart-items-summary" id="cartCount"></span>
+  <span id="cartTotal"></span>
+  <span style="margin-left:auto;background:#c09253;color:#fff;border-radius:8px;padding:7px 17px;font-weight:600;">Place Order</span>
+</div>
+<div class="modal-bg" id="cartModalBg">
+  <div class="modal">
+    <div class="modal-title">Your Order</div>
+    <div class="order-list" id="orderSummary"></div>
+    <form id="orderForm" onsubmit="placeOrder(event)">
+      <input id="tableName" required placeholder="Table Name / Online" type="text" />
+      <br>
+      <button type="submit" class="modal-btn">Place Order</button>
+      <button type="button" class="modal-btn secondary" onclick="hideCartModal()">Continue Selection</button>
+    </form>
+  </div>
 </div>
 <script>
 const menu = [
-  {category:"All day Breakfast", name:"Eggs in the basket", price:99, type:"egg"},
-  {category:"All day Breakfast", name:"dates + egg + fruit", price:99, type:"egg"},
-  {category:"All day Breakfast", name:"Scrambled egg platter", price:129, type:"non-veg"},
-  {category:"All day Breakfast", name:"Cheese Omlette platter", price:149, type:"non-veg"},
-  {category:"All day Breakfast", name:"Veg farmer bfst", price:179, type:"veg"},
-  {category:"All day Breakfast", name:"Great english bfst", price:299, type:"non-veg"},
-  {category:"Omlette", name:"Desi masala Omlette", price:69, type:"egg"},
-  {category:"Omlette", name:"chilli cheese Omlette", price:79, type:"egg"},
-  {category:"Omlette", name:"chicken Omlette", price:89, type:"non-veg"},
-  {category:"Box Meals", name:"roti veg curry", price:79, type:"veg"},
-  {category:"Box Meals", name:"veg meal box", price:129, type:"veg"},
-  {category:"Box Meals", name:"roti chicken curry", price:99, type:"non-veg"},
-  {category:"Box Meals", name:"non veg meal box", price:149, type:"non-veg"},
-  {category:"Snacks", name:"onion pakoda", price:49, type:"veg"},
-  {category:"Snacks", name:"Egg bites", price:59, type:"egg"},
-  {category:"Snacks", name:"French fries", price:59, type:"veg"},
-  {category:"Snacks", name:"Mushroom pakoda", price:69, type:"veg"},
-  {category:"Snacks", name:"Egg bomb", price:69, type:"egg"},
-  {category:"Snacks", name:"chicken popcorn", price:79, type:"non-veg"},
+  {category:"All day Breakfast", name:"Eggs in the Basket", price:99, type:"egg"},
+  {category:"All day Breakfast", name:"Dates + Egg + Fruit", price:99, type:"egg"},
+  {category:"All day Breakfast", name:"Scrambled Egg Platter", price:129, type:"non-veg"},
+  {category:"All day Breakfast", name:"Cheese Omelette Platter", price:149, type:"non-veg"},
+  {category:"All day Breakfast", name:"Veg Farmer Breakfast", price:179, type:"veg"},
+  {category:"All day Breakfast", name:"Great English Breakfast", price:299, type:"non-veg"},
+  {category:"Omelette", name:"Desi Masala Omelette", price:69, type:"egg"},
+  {category:"Omelette", name:"Chilli Cheese Omelette", price:79, type:"egg"},
+  {category:"Omelette", name:"Chicken Omelette", price:89, type:"non-veg"},
+  {category:"Box Meals", name:"Roti Veg Curry", price:79, type:"veg"},
+  {category:"Box Meals", name:"Veg Meal Box", price:129, type:"veg"},
+  {category:"Box Meals", name:"Roti Chicken Curry", price:99, type:"non-veg"},
+  {category:"Box Meals", name:"Non-Veg Meal Box", price:149, type:"non-veg"},
+  {category:"Snacks", name:"Onion Pakoda", price:49, type:"veg"},
+  {category:"Snacks", name:"Egg Bites", price:59, type:"egg"},
+  {category:"Snacks", name:"French Fries", price:59, type:"veg"},
+  {category:"Snacks", name:"Mushroom Pakoda", price:69, type:"veg"},
+  {category:"Snacks", name:"Egg Bomb", price:69, type:"egg"},
+  {category:"Snacks", name:"Chicken Popcorn", price:79, type:"non-veg"},
   {category:"Snacks", name:"Hash Brown", price:30, type:"veg"},
   {category:"Snacks", name:"Samosa", price:30, type:"veg"},
-  {category:"Maggie", name:"veg cheese maggie", price:69, type:"veg"},
-  {category:"Maggie", name:"egg maggie", price:79, type:"egg"},
-  {category:"Maggie", name:"chicken maggie", price:89, type:"non-veg"},
-  {category:"Sandwich", name:"mix veg Sandwich", price:79, type:"veg"},
-  {category:"Sandwich", name:"mushroom melt Sandwich", price:99, type:"veg"},
-  {category:"Sandwich", name:"Seriacha egg Sandwich", price:99, type:"egg"},
-  {category:"Sandwich", name:"chicken Sandwich", price:139, type:"non-veg"},
+  {category:"Maggie", name:"Veg Cheese Maggie", price:69, type:"veg"},
+  {category:"Maggie", name:"Egg Maggie", price:79, type:"egg"},
+  {category:"Maggie", name:"Chicken Maggie", price:89, type:"non-veg"},
+  {category:"Sandwich", name:"Mix Veg Sandwich", price:79, type:"veg"},
+  {category:"Sandwich", name:"Mushroom Melt Sandwich", price:99, type:"veg"},
+  {category:"Sandwich", name:"Sriracha Egg Sandwich", price:99, type:"egg"},
+  {category:"Sandwich", name:"Chicken Sandwich", price:139, type:"non-veg"},
   {category:"Sandwich", name:"Nutella Sandwich", price:69, type:"veg"},
-  {category:"Pancake", name:"classis pancake", price:79, type:"veg"},
-  {category:"Juice", name:"lemon juice", price:29, type:"veg"},
-  {category:"Juice", name:"watermelon juice", price:49, type:"veg"},
-  {category:"Juice", name:"pineapple juice", price:49, type:"veg"},
-  {category:"Juice", name:"banana juice", price:49, type:"veg"},
-  {category:"Juice", name:"muskmelon juice", price:49, type:"veg"},
-  {category:"Juice", name:"carrot juice", price:49, type:"veg"},
-  {category:"Juice", name:"apple juice", price:69, type:"veg"},
-  {category:"Juice", name:"abc juice", price:89, type:"veg"},
-  {category:"Beverages", name:"tea", price:29, type:"veg"},
-  {category:"Beverages", name:"coffee", price:39, type:"veg"},
-  {category:"Beverages", name:"hot chocolate", price:49, type:"veg"},
-  {category:"Desserts", name:"Gulab Jamun Icecream", price:180, type:"veg"},
-  {category:"Desserts", name:"Brownie Icecream", price:180, type:"veg"},
-  {category:"Extra", name:"toast", price:20, type:"veg"},
-  {category:"Extra", name:"roti", price:10, type:"veg"},
+  {category:"Pancake", name:"Classic Pancake", price:79, type:"veg"},
+  {category:"Juice", name:"Lemon Juice", price:29, type:"veg"},
+  {category:"Juice", name:"Watermelon Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Pineapple Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Banana Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Muskmelon Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Carrot Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Apple Juice", price:69, type:"veg"},
+  {category:"Juice", name:"ABC Juice", price:89, type:"veg"},
+  {category:"Beverages", name:"Tea", price:29, type:"veg"},
+  {category:"Beverages", name:"Coffee", price:39, type:"veg"},
+  {category:"Beverages", name:"Hot Chocolate", price:49, type:"veg"},
+  {category:"Desserts", name:"Gulab Jamun Ice Cream", price:180, type:"veg"},
+  {category:"Desserts", name:"Brownie Ice Cream", price:180, type:"veg"},
+  {category:"Extra", name:"Toast", price:20, type:"veg"},
+  {category:"Extra", name:"Roti", price:10, type:"veg"},
   {category:"Extra", name:"Zostel", price:350, type:"veg"},
 ];
 let cart = [];
-function menuRow(item, idx) {
-  return `<tr>
-      <td>${item.category}</td>
-      <td>${item.name}</td>
-      <td>₹${item.price}</td>
-      <td class="${item.type}">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</td>
-      <td><button onclick="addToCart(${idx})">Add</button></td>
-    </tr>`;
+let catList = Array.from(new Set(menu.map(i => i.category)));
+const catNav = document.getElementById('catNav');
+catList.forEach(cat=>{
+  let btn = document.createElement('button');
+  btn.textContent = cat;
+  btn.className = 'cat-btn';
+  btn.onclick = ()=>filterCategory(cat);
+  catNav.appendChild(btn);
+});
+function filterCategory(cat) {
+  document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.remove('active'));
+  Array.from(catNav.children).find(btn=>btn.textContent==cat).classList.add('active');
+  showItems(cat);
 }
-document.getElementById('menu').innerHTML =
-  `<tr>
-    <th>Category</th>
-    <th>Item</th>
-    <th>Price</th>
-    <th>Type</th>
-    <th>Add</th>
-  </tr>` + menu.map(menuRow).join('');
+function showItems(cat) {
+  const itemsList = document.getElementById('itemsList');
+  itemsList.innerHTML = '';
+  menu.filter(i => !cat || i.category == cat).forEach((item, idx)=>{
+    itemsList.innerHTML += `<div class="item-card ${item.type}">
+      <div>
+        <div style="font-weight:600">${item.name}</div>
+        <small>${item.category} • ₹${item.price} • ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</small>
+      </div>
+      <button class="add-btn" onclick="addToCart(${idx});event.stopPropagation()">Add</button>
+    </div>`;
+  });
+}
+showItems();
 function addToCart(idx) {
-  const item = menu[idx];
-  const found = cart.find(i => i.name === item.name);
-  if (found) found.qty++;
-  else cart.push({ ...item, qty: 1 });
-  updateCart();
+  let item = menu[idx];
+  let found = cart.find(i=>i.name==item.name);
+  if(found) found.qty++;
+  else cart.push({...item, qty:1});
+  updateCartBar();
 }
-function removeFromCart(name) {
-  cart = cart.filter(i => i.name !== name);
-  updateCart();
+function updateCartBar() {
+  const count = cart.reduce((sum,i)=>sum+i.qty,0);
+  const total = cart.reduce((sum,i)=>sum+i.qty*i.price,0);
+  document.getElementById('cartCount').textContent = `Items: ${count}`;
+  document.getElementById('cartTotal').textContent = `Total: ₹${total}`;
+  document.getElementById('cartBar').classList.toggle('hidden', cart.length==0);
 }
-function updateCart() {
-  document.getElementById('cart').innerHTML = cart.map(i =>
-    `${i.name} x${i.qty} - ₹${i.price * i.qty} <button onclick="removeFromCart('${i.name}')">Remove</button>`
-  ).join('<br>');
-  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  document.getElementById('bill').textContent = "Total: ₹" + total;
-  document.getElementById('placeOrderBtn').disabled = cart.length === 0;
+function showCartModal() {
+  let summaryHtml = cart.length
+    ? cart.map(i=>`<div>${i.name} x${i.qty} - ₹${i.qty*i.price}</div>`).join('') + `<div style="margin-top:13px;font-weight:600;">Total: ₹${cart.reduce((sum,i)=>sum+i.qty*i.price,0)}</div>`
+    : "<em>No items yet!</em>";
+  document.getElementById('orderSummary').innerHTML = summaryHtml;
+  document.getElementById('cartModalBg').style.display='block';
 }
-function placeOrder() {
-  const table = prompt("Enter table name/number or 'online':");
+function hideCartModal() {
+  document.getElementById('cartModalBg').style.display='none';
+}
+function placeOrder(event) {
+  event.preventDefault();
+  const table = document.getElementById('tableName').value || "Online";
   const now = new Date();
   const orderDetails = {
-    table: table || "Online",
+    table: table,
     date: now.toLocaleDateString(),
     time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     value: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
     status: "Paid",
-    order: cart.map(i => `${i.name} x${i.qty}`).join(', ')
+    order: cart.map(i=>`${i.name} x${i.qty}`).join(', ')
   };
   fetch('https://script.google.com/macros/s/AKfycbzEgDgE-8NeNudGa24a4BUQcnjylOVcdD0_v40fQDYeU9EmA8nr3Bu3vsI7EwMPvDnY/exec', {
     method: 'POST',
     body: JSON.stringify(orderDetails)
   })
-  .then(response => response.text())
-  .then(msg => {
-    alert(msg); cart = []; updateCart();
+  .then(r=>r.text())
+  .then(msg=>{
+    alert(msg || "Order placed!");
+    cart=[]; hideCartModal(); updateCartBar();
+    document.getElementById('tableName').value = '';
   })
-  .catch(err => alert("Order failed: " + err));
+  .catch(err=>alert("Order failed: "+err));
 }
+updateCartBar();
 </script>
 </body>
 </html>
