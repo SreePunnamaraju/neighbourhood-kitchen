@@ -129,7 +129,7 @@ function placeOrder() {
     status: "Paid",
     order: cart.map(i => `${i.name} x${i.qty}`).join(', ')
   };
-  fetch('YOUR_WEB_APP_URL', {
+  fetch('https://script.google.com/macros/s/AKfycbzEgDgE-8NeNudGa24a4BUQcnjylOVcdD0_v40fQDYeU9EmA8nr3Bu3vsI7EwMPvDnY/exec', {
     method: 'POST',
     body: JSON.stringify(orderDetails)
   })
