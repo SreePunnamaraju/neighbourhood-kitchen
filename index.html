@@ -92,7 +92,7 @@ function filterCategory(cat) {
     let first = Array.from(itemsList.children)[0];
     if(first) first.scrollIntoView({behavior:'smooth',block:'start'});
   },20);
-  // Scroll horizontally so the selected category is centered
+  // Scroll horizontally so the selected category is centered comment
   let activeBtn = Array.from(catNav.children).find(btn=>btn.textContent==cat);
   if(activeBtn){
     let left = activeBtn.offsetLeft - catNav.offsetWidth/2 + activeBtn.offsetWidth/2;
