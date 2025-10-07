@@ -1,322 +1,126 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Café Menu — Local Order App</title>
+  <meta charset="UTF-8">
+  <title>The Neighbourhood Kitchen by Zostel</title>
   <style>
-    :root{
-      --bg:#faf7f2;
-      --card:#ffffff;
-      --muted:#666;
-      --accent:#7b3f00; /* warm café brown */
-      --veg:#2ca02c;
-      --egg:#d6a800;
-      --non:#d9534f;
-      --best:#ffb74d;
-      --shadow: 0 6px 18px rgba(20,20,20,0.08);
-    }
-    *{box-sizing:border-box;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;}
-    body{margin:0;background:linear-gradient(180deg,#fff 0%,var(--bg) 100%);color:#222;min-height:100vh;display:flex;flex-direction:column;}
-    header{padding:18px 20px;border-bottom:1px solid #eee;background:var(--card);display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:30;box-shadow:var(--shadow)}
-    h1{margin:0;font-size:18px;color:var(--accent)}
-    .controls{margin-left:auto;display:flex;gap:12px;align-items:center}
-    .admin-toggle{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
-    .container{max-width:980px;margin:18px auto;padding:0 16px 140px;}
-    .category{margin-bottom:18px}
-    .cat-title{font-weight:700;margin:10px 0;color:#333}
-    .items{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
-    .card{background:var(--card);padding:12px;border-radius:10px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;position:relative}
-    .badge{position:absolute;top:10px;right:10px;font-size:12px;padding:6px;border-radius:8px;background:var(--best);box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-    .best-star{position:absolute;left:10px;top:10px;font-size:16px;cursor:pointer;opacity:0.9}
-    .best-star.locked{display:none}
-    .row{display:flex;align-items:center;gap:10px}
-    .name{font-weight:600}
-    .desc{font-size:13px;color:var(--muted)}
-    .price{margin-left:auto;font-weight:700}
-    .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
-    .controls-qty{display:flex;gap:8px;align-items:center;margin-top:6px}
-    .qty-btn{background:#f0f0f0;border:0;padding:6px 10px;border-radius:8px;font-weight:700;cursor:pointer}
-    .qty{min-width:28px;text-align:center;font-weight:700}
-    footer.orderbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,var(--card),#fff);padding:12px 18px;border-top:1px solid #eee;display:flex;justify-content:center;box-shadow:0 -6px 20px rgba(0,0,0,0.06)}
-    .order-inner{max-width:980px;width:100%;display:flex;align-items:center;gap:12px}
-    .summary{flex:1;display:flex;gap:12px;align-items:center}
-    .summary .line{font-size:14px;color:var(--muted)}
-    .total{font-weight:800;font-size:18px;color:var(--accent)}
-    .place{background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700}
-    .orders-list{max-height:300px;overflow:auto;padding:8px 12px;border-radius:8px;background:#fff;box-shadow:var(--shadow)}
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:60;backdrop-filter:blur(2px)}
-    .modal-card{background:#fff;padding:18px;border-radius:12px;max-width:680px;width:100%;}
-    .small{font-size:13px;color:var(--muted)}
-    .qr-hint{font-size:13px;color:var(--muted);margin-top:6px}
-    /* responsive tweaks */
-    @media (max-width:600px){
-      .items{grid-template-columns:1fr}
-      header{padding:12px}
-      .name{font-size:15px}
-    }
+    body { font-family: Arial; background: #fcf9ec; padding: 24px; }
+    h1 { color: #765c3d; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 32px;}
+    th, td { padding: 10px; border-bottom: 1px solid #e1c7a7;}
+    th { background: #a98567; color: #fff; }
+    .veg { background: #def7c6; }
+    .non-veg { background: #ffe2e0; }
+    .egg { background: #fff8c6; }
+    .bestseller { color: #bf8400; font-weight:bold;}
+    #orderSummary { background: #fff7e6; padding: 16px; border-radius: 7px; }
+    button { padding: 6px 17px; border-radius: 4px; border: none; background: #a98567; color: #fff; font-weight: bold; margin-top: 6px; }
+    button:disabled { background: #ddd; color: #aaa;}
   </style>
 </head>
 <body>
-  <header>
-    <h1>Local Café Menu</h1>
-    <div class="controls">
-      <div class="admin-toggle">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <input id="adminSwitch" type="checkbox" /> <span class="small">Admin Mode</span>
-        </label>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end">
-        <div class="small">Open locally</div>
-        <div class="small" id="localUrl">file://index.html</div>
-      </div>
-    </div>
-  </header>
-
-  <main class="container" id="app">
-    <!-- categories and items will be injected here -->
-  </main>
-
-  <footer class="orderbar">
-    <div class="order-inner">
-      <div class="summary">
-        <div class="line small">Items: <span id="count">0</span></div>
-        <div class="line small">Subtotal: ₹<span id="subtotal">0.00</span></div>
-        <div class="line small total">Total: ₹<span id="total">0.00</span></div>
-      </div>
-      <button class="place" id="placeOrderBtn">Place Order</button>
-    </div>
-  </footer>
-
-  <!-- Modal -->
-  <div id="modal" style="display:none"></div>
-
+<h1>The Neighbourhood Kitchen by Zostel</h1>
+<table id="menu"></table>
+<div id="orderSummary">
+  <h3>Order Summary</h3>
+  <div id="cart"></div>
+  <div id="bill">Total: ₹0</div>
+  <button onclick="placeOrder()" id="placeOrderBtn" disabled>Place Order</button>
+</div>
 <script>
-/*************** MENU DATA (from user) ****************
- Category | Item | S.P | Veg/Non-Veg
-******************************************************/
-const rawMenu = [
-  ["All day BreakFast","Eggs in the basket",99,"Egg"],
-  ["All day BreakFast","dates + egg + fruit",99,"Egg"],
-  ["All day BreakFast","Scrambled egg platter",129,"Non-Veg"],
-  ["All day BreakFast","Cheese Omlette platter",149,"Non-Veg"],
-  ["All day BreakFast","Veg farmer bfst",179,"Veg"],
-  ["All day BreakFast","Great english bfst",299,"Non-Veg"],
-  ["Omlette","Desi masala Omlette",69,"Egg"],
-  ["Omlette","chilli cheese Omlette",79,"Egg"],
-  ["Omlette","chicken Omlette",89,"Non-Veg"],
-  ["Box Meals","roti veg curry",79,"Veg"],
-  ["Box Meals","veg meal box",129,"Veg"],
-  ["Box Meals","roti chicken curry",99,"Non-Veg"],
-  ["Box Meals","non veg meal box",149,"Non-Veg"],
-  ["Snacks","onion pakoda",49,"Veg"],
-  ["Snacks","Egg bites",59,"Egg"],
-  ["Snacks","French fries",59,"Veg"],
-  ["Snacks","Mushroom pakoda",69,"Veg"],
-  ["Snacks","Egg bomb",69,"Egg"],
-  ["Snacks","chicken popcorn",79,"Non-Veg"],
-  ["Maggie","veg cheese maggie",69,"Veg"],
-  ["Maggie","egg maggie",79,"Egg"],
-  ["Maggie","chicken maggie",89,"Non-Veg"],
-  ["Sandwich","mix veg Sandwich",79,"Veg"],
-  ["Sandwich","mushroom melt Sandwich",99,"Veg"],
-  ["Sandwich","Seriacha egg Sandwich",99,"Egg"],
-  ["Sandwich","chicken Sandwich",139,"Non-Veg"],
-  ["Sandwich","Nutella Sandwich",69,"Veg"],
-  ["Pancake","classis pancake",79,"Veg"],
-  ["Juice","lemon juice",29,"Veg"],
-  ["Juice","watermelon juice",49,"Veg"],
-  ["Juice","pineapple juice",49,"Veg"],
-  ["Juice","banana juice",49,"Veg"],
-  ["Juice","muskmelon juice",49,"Veg"],
-  ["Juice","carrot juice",49,"Veg"],
-  ["Juice","apple juice",69,"Veg"],
-  ["Juice","abc juice",89,"Veg"],
-  ["Beverages","tea",29,"Veg"],
-  ["Beverages","coffee",39,"Veg"],
-  ["Beverages","hot chocolate",49,"Veg"],
-  ["Snacks","Hash Brown",30,"Veg"],
-  ["Desserts","Gulab Jamun Icecream",null,"Veg"],
-  ["Desserts","Brownie Icecream",180,"Veg"],
-  ["Extra","toast",20,"Veg"],
-  ["Extra","roti",10,"Veg"],
-  ["Extra","Zostel",350,null],
-  ["Snacks","Samosa",30,"Veg"]
+// Final static menu array
+const menu = [
+  {category:"All day Breakfast", name:"Eggs in the basket", price:99, type:"egg"},
+  {category:"All day Breakfast", name:"dates + egg + fruit", price:99, type:"egg"},
+  {category:"All day Breakfast", name:"Scrambled egg platter", price:129, type:"non-veg"},
+  {category:"All day Breakfast", name:"Cheese Omlette platter", price:149, type:"non-veg"},
+  {category:"All day Breakfast", name:"Veg farmer bfst", price:179, type:"veg"},
+  {category:"All day Breakfast", name:"Great english bfst", price:299, type:"non-veg"},
+  {category:"Omlette", name:"Desi masala Omlette", price:69, type:"egg"},
+  {category:"Omlette", name:"chilli cheese Omlette", price:79, type:"egg"},
+  {category:"Omlette", name:"chicken Omlette", price:89, type:"non-veg"},
+  {category:"Box Meals", name:"roti veg curry", price:79, type:"veg"},
+  {category:"Box Meals", name:"veg meal box", price:129, type:"veg"},
+  {category:"Box Meals", name:"roti chicken curry", price:99, type:"non-veg"},
+  {category:"Box Meals", name:"non veg meal box", price:149, type:"non-veg"},
+  {category:"Snacks", name:"onion pakoda", price:49, type:"veg"},
+  {category:"Snacks", name:"Egg bites", price:59, type:"egg"},
+  {category:"Snacks", name:"French fries", price:59, type:"veg"},
+  {category:"Snacks", name:"Mushroom pakoda", price:69, type:"veg"},
+  {category:"Snacks", name:"Egg bomb", price:69, type:"egg"},
+  {category:"Snacks", name:"chicken popcorn", price:79, type:"non-veg"},
+  {category:"Snacks", name:"Hash Brown", price:30, type:"veg"},
+  {category:"Snacks", name:"Samosa", price:30, type:"veg"},
+  {category:"Maggie", name:"veg cheese maggie", price:69, type:"veg"},
+  {category:"Maggie", name:"egg maggie", price:79, type:"egg"},
+  {category:"Maggie", name:"chicken maggie", price:89, type:"non-veg"},
+  {category:"Sandwich", name:"mix veg Sandwich", price:79, type:"veg"},
+  {category:"Sandwich", name:"mushroom melt Sandwich", price:99, type:"veg"},
+  {category:"Sandwich", name:"Seriacha egg Sandwich", price:99, type:"egg"},
+  {category:"Sandwich", name:"chicken Sandwich", price:139, type:"non-veg"},
+  {category:"Sandwich", name:"Nutella Sandwich", price:69, type:"veg"},
+  {category:"Pancake", name:"classis pancake", price:79, type:"veg"},
+  {category:"Juice", name:"lemon juice", price:29, type:"veg"},
+  {category:"Juice", name:"watermelon juice", price:49, type:"veg"},
+  {category:"Juice", name:"pineapple juice", price:49, type:"veg"},
+  {category:"Juice", name:"banana juice", price:49, type:"veg"},
+  {category:"Juice", name:"muskmelon juice", price:49, type:"veg"},
+  {category:"Juice", name:"carrot juice", price:49, type:"veg"},
+  {category:"Juice", name:"apple juice", price:69, type:"veg"},
+  {category:"Juice", name:"abc juice", price:89, type:"veg"},
+  {category:"Beverages", name:"tea", price:29, type:"veg"},
+  {category:"Beverages", name:"coffee", price:39, type:"veg"},
+  {category:"Beverages", name:"hot chocolate", price:49, type:"veg"},
+  {category:"Desserts", name:"Gulab Jamun Icecream", price:180, type:"veg"},
+  {category:"Desserts", name:"Brownie Icecream", price:180, type:"veg"},
+  {category:"Extra", name:"toast", price:20, type:"veg"},
+  {category:"Extra", name:"roti", price:10, type:"veg"},
+  {category:"Extra", name:"Zostel", price:350, type:"veg"}
 ];
-
-// Build a structured menu with unique ids
-const menu = rawMenu.map((r, i) => {
-  return {
-    id: 'i' + i,
-    category: r[0],
-    name: r[1],
-    price: (r[2] === null || r[2] === undefined) ? null : Number(r[2]),
-    tag: r[3] || '',
-  }
-});
-
-// Helper: load best-seller map from localStorage
-function loadBestsellers(){
-  try{
-    const raw = localStorage.getItem('bestsellers_v1') || '{}';
-    return JSON.parse(raw);
-  }catch(e){ return {}; }
+let cart = [];
+function menuRow(item, idx) {
+  return `<tr>
+      <td>${item.category}</td>
+      <td>${item.name}</td>
+      <td>₹${item.price}</td>
+      <td class="${item.type}">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</td>
+      <td>${item.bestseller ? '<span class="bestseller">★</span>' : ''}</td>
+      <td><button onclick="addToCart(${idx})">Add</button></td>
+    </tr>`;
 }
-function saveBestsellers(map){
-  localStorage.setItem('bestsellers_v1', JSON.stringify(map));
+document.getElementById('menu').innerHTML =
+  `<tr>
+    <th>Category</th>
+    <th>Item</th>
+    <th>Price</th>
+    <th>Type</th>
+    <th>Best Seller</th>
+    <th>Add</th>
+  </tr>` + menu.map(menuRow).join('');
+function addToCart(idx) {
+  const item = menu[idx];
+  const found = cart.find(i => i.name === item.name);
+  if (found) found.qty++;
+  else cart.push({ ...item, qty: 1 });
+  updateCart();
 }
-let bests = loadBestsellers();
-
-// Orders storage key
-const ORDERS_KEY = 'local_orders_v1';
-
-// App state
-const state = {
-  qty: {}, // itemId -> count
-};
-
-// Utility: group by category
-function groupByCategory(list){
-  const map = {};
-  list.forEach(it=>{
-    if(!map[it.category]) map[it.category]=[];
-    map[it.category].push(it);
-  });
-  return map;
+function removeFromCart(name) {
+  cart = cart.filter(i => i.name !== name);
+  updateCart();
 }
-
-const appEl = document.getElementById('app');
-const adminSwitch = document.getElementById('adminSwitch');
-const localUrlEl = document.getElementById('localUrl');
-
-function renderMenu(){
-  appEl.innerHTML = '';
-  const grouped = groupByCategory(menu);
-  for(const cat of Object.keys(grouped)){
-    const catDiv = document.createElement('div');
-    catDiv.className='category';
-    const t = document.createElement('div');
-    t.className='cat-title';
-    t.textContent = cat;
-    catDiv.appendChild(t);
-
-    const itemsWrap = document.createElement('div');
-    itemsWrap.className='items';
-
-    grouped[cat].forEach(it => {
-      const card = document.createElement('div');
-      card.className='card';
-      // best-seller badge
-      if(bests[it.id]){
-        const b = document.createElement('div');
-        b.className='badge';
-        b.innerHTML = '⭐ Best seller';
-        card.appendChild(b);
-      }
-
-      // star for admin toggle
-      const star = document.createElement('div');
-      star.className = 'best-star';
-      star.innerHTML = bests[it.id] ? '★' : '☆';
-      star.title = 'Toggle Best seller (Admin Mode)';
-      card.appendChild(star);
-      if(!adminSwitch.checked) star.classList.add('locked');
-
-      // item row
-      const row = document.createElement('div');
-      row.className='row';
-      const dot = document.createElement('span');
-      dot.className='dot';
-      if(it.tag === 'Veg') dot.style.background = 'var(--veg)';
-      else if(it.tag === 'Egg') dot.style.background = 'var(--egg)';
-      else if(it.tag === 'Non-Veg') dot.style.background = 'var(--non)';
-      else dot.style.background = '#bbb';
-
-      const name = document.createElement('div');
-      name.style.flex='1';
-      const nm = document.createElement('div');
-      nm.className='name';
-      nm.textContent = it.name;
-      const desc = document.createElement('div');
-      desc.className='desc';
-      desc.textContent = it.tag || '';
-
-      name.appendChild(nm);
-      name.appendChild(desc);
-
-      const price = document.createElement('div');
-      price.className='price';
-      price.textContent = it.price===null ? 'Ask' : '₹' + Number(it.price).toFixed(0);
-
-      row.appendChild(dot);
-      row.appendChild(name);
-      row.appendChild(price);
-      card.appendChild(row);
-
-      // qty controls
-      const ctl = document.createElement('div');
-      ctl.className='controls-qty';
-      const minus = document.createElement('button');
-      minus.className='qty-btn';
-      minus.textContent = '−';
-      const qtySpan = document.createElement('div');
-      qtySpan.className='qty';
-      qtySpan.textContent = state.qty[it.id] || 0;
-      const plus = document.createElement('button');
-      plus.className='qty-btn';
-      plus.textContent = '+';
-
-      // disable controls if price unknown
-      if(it.price === null){
-        plus.disabled = true;
-        minus.disabled = true;
-        plus.title = 'Price not available';
-      }
-
-      minus.addEventListener('click', ()=>{
-        const cur = state.qty[it.id]||0;
-        if(cur>0){
-          state.qty[it.id]=cur-1;
-          qtySpan.textContent = state.qty[it.id];
-          updateTotals();
-        }
-      });
-      plus.addEventListener('click', ()=>{
-        const cur = state.qty[it.id]||0;
-        state.qty[it.id]=cur+1;
-        qtySpan.textContent = state.qty[it.id];
-        updateTotals();
-      });
-
-      ctl.appendChild(minus);
-      ctl.appendChild(qtySpan);
-      ctl.appendChild(plus);
-      card.appendChild(ctl);
-
-      // star click to toggle best (only in admin)
-      star.addEventListener('click', ()=>{
-        if(!adminSwitch.checked) return;
-        bests[it.id] = !bests[it.id];
-        if(!bests[it.id]) delete bests[it.id];
-        saveBestsellers(bests);
-        renderMenu(); // re-render to show badge and star state
-      });
-
-      itemsWrap.appendChild(card);
-    });
-
-    catDiv.appendChild(itemsWrap);
-    appEl.appendChild(catDiv);
-  }
+function updateCart() {
+  document.getElementById('cart').innerHTML = cart.map(i => 
+    `${i.name} x${i.qty} - ₹${i.price * i.qty} <button onclick="removeFromCart('${i.name}')">Remove</button>`
+  ).join('<br>');
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  document.getElementById('bill').textContent = "Total: ₹" + total;
+  document.getElementById('placeOrderBtn').disabled = cart.length === 0;
 }
-
-// Totals
-function updateTotals(){
-  const subtotalEl = document.getElementById('subtotal');
-  const totalEl = document.getElementById('total');
-  const countEl = document.getElementById('count');
-
-  let subtotal = 0;
-  let itemCount = 0;
-  for(const id in state.qty){
-    const qty
+function placeOrder() {
+  alert("Order Placed! (Integrate with Google Sheets backend here)");
+  cart = [];
+  updateCart();
+}
+</script>
+</body>
+</html>
