@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>The Neighbourhood Kitchen by Zostel</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: Arial; background: #fcf9ec; padding: 24px; }
+    body { font-family: Arial, sans-serif; background: #fcf9ec; padding: 24px; }
     h1 { color: #765c3d; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 32px;}
-    th, td { padding: 10px; border-bottom: 1px solid #e1c7a7;}
+    th, td { padding: 10px; border-bottom: 1px solid #e1c7a7; text-align: left;}
     th { background: #a98567; color: #fff; }
     .veg { background: #def7c6; }
     .non-veg { background: #ffe2e0; }
     .egg { background: #fff8c6; }
-    .bestseller { color: #bf8400; font-weight:bold;}
     #orderSummary { background: #fff7e6; padding: 16px; border-radius: 7px; }
     button { padding: 6px 17px; border-radius: 4px; border: none; background: #a98567; color: #fff; font-weight: bold; margin-top: 6px; }
     button:disabled { background: #ddd; color: #aaa;}
+    @media (max-width:600px) {
+      body { padding: 3vw; }
+      th, td { font-size: 14px; padding: 7px; }
+      h1 { font-size: 1.2em; }
+    }
   </style>
 </head>
 <body>
@@ -28,7 +33,6 @@
   <button onclick="placeOrder()" id="placeOrderBtn" disabled>Place Order</button>
 </div>
 <script>
-// Final static menu array
 const menu = [
   {category:"All day Breakfast", name:"Eggs in the basket", price:99, type:"egg"},
   {category:"All day Breakfast", name:"dates + egg + fruit", price:99, type:"egg"},
@@ -75,7 +79,7 @@ const menu = [
   {category:"Desserts", name:"Brownie Icecream", price:180, type:"veg"},
   {category:"Extra", name:"toast", price:20, type:"veg"},
   {category:"Extra", name:"roti", price:10, type:"veg"},
-  {category:"Extra", name:"Zostel", price:350, type:"veg"}
+  {category:"Extra", name:"Zostel", price:350, type:"veg"},
 ];
 let cart = [];
 function menuRow(item, idx) {
@@ -84,7 +88,6 @@ function menuRow(item, idx) {
       <td>${item.name}</td>
       <td>₹${item.price}</td>
       <td class="${item.type}">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</td>
-      <td>${item.bestseller ? '<span class="bestseller">★</span>' : ''}</td>
       <td><button onclick="addToCart(${idx})">Add</button></td>
     </tr>`;
 }
@@ -94,7 +97,6 @@ document.getElementById('menu').innerHTML =
     <th>Item</th>
     <th>Price</th>
     <th>Type</th>
-    <th>Best Seller</th>
     <th>Add</th>
   </tr>` + menu.map(menuRow).join('');
 function addToCart(idx) {
@@ -109,7 +111,7 @@ function removeFromCart(name) {
   updateCart();
 }
 function updateCart() {
-  document.getElementById('cart').innerHTML = cart.map(i => 
+  document.getElementById('cart').innerHTML = cart.map(i =>
     `${i.name} x${i.qty} - ₹${i.price * i.qty} <button onclick="removeFromCart('${i.name}')">Remove</button>`
   ).join('<br>');
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
@@ -117,9 +119,25 @@ function updateCart() {
   document.getElementById('placeOrderBtn').disabled = cart.length === 0;
 }
 function placeOrder() {
-  alert("Order Placed! (Integrate with Google Sheets backend here)");
-  cart = [];
-  updateCart();
+  const table = prompt("Enter table name/number or 'online':");
+  const now = new Date();
+  const orderDetails = {
+    table: table || "Online",
+    date: now.toLocaleDateString(),
+    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    value: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
+    status: "Paid",
+    order: cart.map(i => `${i.name} x${i.qty}`).join(', ')
+  };
+  fetch('YOUR_WEB_APP_URL', {
+    method: 'POST',
+    body: JSON.stringify(orderDetails)
+  })
+  .then(response => response.text())
+  .then(msg => {
+    alert(msg); cart = []; updateCart();
+  })
+  .catch(err => alert("Order failed: " + err));
 }
 </script>
 </body>
