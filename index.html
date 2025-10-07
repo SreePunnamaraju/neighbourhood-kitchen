@@ -1,11 +1,3 @@
-Here is your **updated HTML code** with all three requested changes applied:  
-- Top navigation is now a horizontal scroll bar  
-- Successful order shows a message and resets to start  
-- “All” category shows all items and is the first button
-
-***
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,6 +51,28 @@ Here is your **updated HTML code** with all three requested changes applied:
     .modal-btn-row{display:flex;gap:26px;}
     .modal-btn{background:#b68f3b;color:#fff;border:none;border-radius:7px;padding:21px 41px;font-size:1.15em;font-weight:600;margin-bottom:0;cursor:pointer;}
     .modal-btn.secondary{background:#c6c6c6;color:#333;}
+    /* Loader Styles */
+    .loader-container { display:none; justify-content:center; align-items:center; flex-direction:column; padding:40px 0;}
+    .loader-spinner {
+      border: 5px solid #e1c7a7;
+      border-top: 5px solid #a98567;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      animation: spin 1s linear infinite;
+      margin-bottom:28px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    .loader-label {
+      color: #a98567;
+      font-weight:600;
+      font-size:1.16em;
+      letter-spacing:0.5px;
+      margin-bottom:13px;
+    }
     @media(max-width:460px){
       .item-card{margin:20px 3px;}
       .modal{max-width:99vw;}
@@ -87,6 +101,10 @@ Here is your **updated HTML code** with all three requested changes applied:
         <button type="button" class="modal-btn secondary" onclick="hideCartModal()">Continue Selection</button>
       </div>
     </form>
+    <div class="loader-container" id="orderLoader">
+      <div class="loader-spinner"></div>
+      <div class="loader-label">Placing order...</div>
+    </div>
   </div>
 </div>
 <script>
@@ -196,12 +214,21 @@ function showCartModal() {
     : "<em>No items yet!</em>";
   document.getElementById('orderSummary').innerHTML = summaryHtml;
   document.getElementById('cartModalBg').style.display='block';
+  document.getElementById('orderForm').style.display = "";
+  document.getElementById('orderSummary').style.display = "";
+  document.getElementById('orderLoader').style.display = "none";
 }
 function hideCartModal() {
   document.getElementById('cartModalBg').style.display='none';
 }
+
 function placeOrder(event) {
   event.preventDefault();
+  // Show loader, hide form and summary
+  document.getElementById('orderForm').style.display = "none";
+  document.getElementById('orderSummary').style.display = "none";
+  document.getElementById('orderLoader').style.display = "flex";
+  
   const table = document.getElementById('tableName').value || "Online";
   const now = new Date();
   const orderDetails = {
@@ -209,7 +236,7 @@ function placeOrder(event) {
     date: now.toLocaleDateString(),
     time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     value: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
-    status: "Unpaid",
+    status: "Paid",
     order: cart.map(i=>`${i.name} x${i.qty}`).join(', ')
   };
   fetch('https://script.google.com/macros/s/AKfycbzEgDgE-8NeNudGa24a4BUQcnjylOVcdD0_v40fQDYeU9EmA8nr3Bu3vsI7EwMPvDnY/exec', {
@@ -218,27 +245,25 @@ function placeOrder(event) {
   })
   .then(r=>r.text())
   .then(msg=>{
-    alert(msg || "Order placed successfully!"); // Show success message
-
-    // Reset cart
+    document.getElementById('orderLoader').style.display = "none";
+    alert(msg || "Order placed successfully!");
     cart = [];
     hideCartModal();
     updateCartBar();
     document.getElementById('tableName').value = '';
     document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.remove('active'));
-
-    // Reset UI to show all items
     filterCategory('All');
     window.scrollTo({top:0,behavior:'smooth'});
   })
-  .catch(err=>alert("Order failed: "+err));
+  .catch(err=>{
+    document.getElementById('orderLoader').style.display = "none";
+    alert("Order failed: "+err);
+    // Restore form and summary for retry
+    document.getElementById('orderForm').style.display = "";
+    document.getElementById('orderSummary').style.display = "";
+  });
 }
 updateCartBar();
 </script>
 </body>
 </html>
-```
-
-***
-
-Copy and use this updated code directly. All requested changes are included and ready to deploy.
