@@ -6,14 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {margin:0; font-family: Arial,sans-serif; background:#fcf9ec;}
-    .sticky-nav{
-      position:sticky;top:0;background:#fff;z-index:9;border-bottom:2px solid #e1c7a7;padding:15px 0 12px 0;
-      display:flex;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;
-      scrollbar-width:thin;scrollbar-color:#d4b07a #fff;
-    }
-    .cat-btn{
-      margin:13px 20px 13px 0;background:#a98567;color:#fff;border-radius:18px;border:none;padding:17px 25px;font-weight:500;font-size:1em;cursor:pointer;flex-shrink:0;transition:background 0.2s;
-    }
+    .sticky-nav{position:sticky;top:0;background:#fff;z-index:9;border-bottom:2px solid #e1c7a7;padding:15px 0 12px 0;display:flex;flex-wrap:wrap;justify-content:center;}
+    .cat-btn{margin:13px 20px 13px 0;background:#a98567;color:#fff;border-radius:18px;border:none;padding:17px 25px;font-weight:500;font-size:1em;cursor:pointer;}
     .cat-btn.active{background:#d4b07a;}
     h1{text-align:center;color:#765c3d;margin:28px 0 20px;}
     .items-list{max-width:540px;margin:0 auto 130px;max-height:56vh;overflow-y:auto;}
@@ -40,10 +34,6 @@
       .cart-bar{padding:16px;}
       .items-list{max-width:99vw;}
     }
-    /* Custom scrollbar hide for sticky-nav, optional */
-    .sticky-nav::-webkit-scrollbar {height:8px;}
-    .sticky-nav::-webkit-scrollbar-thumb {background:#d4b07a;border-radius:5px;}
-    .sticky-nav::-webkit-scrollbar-track {background:#fff;}
   </style>
 </head>
 <body>
@@ -70,12 +60,56 @@
 </div>
 <script>
 const menu = [
-  // ... [same as your list above]
+  {category:"All day Breakfast", name:"Eggs in the Basket", price:99, type:"egg"},
+  {category:"All day Breakfast", name:"Dates + Egg + Fruit", price:99, type:"egg"},
+  {category:"All day Breakfast", name:"Scrambled Egg Platter", price:129, type:"non-veg"},
+  {category:"All day Breakfast", name:"Cheese Omelette Platter", price:149, type:"non-veg"},
+  {category:"All day Breakfast", name:"Veg Farmer Breakfast", price:179, type:"veg"},
+  {category:"All day Breakfast", name:"Great English Breakfast", price:299, type:"non-veg"},
+  {category:"Omelette", name:"Desi Masala Omelette", price:69, type:"egg"},
+  {category:"Omelette", name:"Chilli Cheese Omelette", price:79, type:"egg"},
+  {category:"Omelette", name:"Chicken Omelette", price:89, type:"non-veg"},
+  {category:"Box Meals", name:"Roti Veg Curry", price:79, type:"veg"},
+  {category:"Box Meals", name:"Veg Meal Box", price:129, type:"veg"},
+  {category:"Box Meals", name:"Roti Chicken Curry", price:99, type:"non-veg"},
+  {category:"Box Meals", name:"Non-Veg Meal Box", price:149, type:"non-veg"},
+  {category:"Snacks", name:"Onion Pakoda", price:49, type:"veg"},
+  {category:"Snacks", name:"Egg Bites", price:59, type:"egg"},
+  {category:"Snacks", name:"French Fries", price:59, type:"veg"},
+  {category:"Snacks", name:"Mushroom Pakoda", price:69, type:"veg"},
+  {category:"Snacks", name:"Egg Bomb", price:69, type:"egg"},
+  {category:"Snacks", name:"Chicken Popcorn", price:79, type:"non-veg"},
+  {category:"Snacks", name:"Hash Brown", price:30, type:"veg"},
+  {category:"Snacks", name:"Samosa", price:30, type:"veg"},
+  {category:"Maggie", name:"Veg Cheese Maggie", price:69, type:"veg"},
+  {category:"Maggie", name:"Egg Maggie", price:79, type:"egg"},
+  {category:"Maggie", name:"Chicken Maggie", price:89, type:"non-veg"},
+  {category:"Sandwich", name:"Mix Veg Sandwich", price:79, type:"veg"},
+  {category:"Sandwich", name:"Mushroom Melt Sandwich", price:99, type:"veg"},
+  {category:"Sandwich", name:"Sriracha Egg Sandwich", price:99, type:"egg"},
+  {category:"Sandwich", name:"Chicken Sandwich", price:139, type:"non-veg"},
+  {category:"Sandwich", name:"Nutella Sandwich", price:69, type:"veg"},
+  {category:"Pancake", name:"Classic Pancake", price:79, type:"veg"},
+  {category:"Juice", name:"Lemon Juice", price:29, type:"veg"},
+  {category:"Juice", name:"Watermelon Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Pineapple Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Banana Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Muskmelon Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Carrot Juice", price:49, type:"veg"},
+  {category:"Juice", name:"Apple Juice", price:69, type:"veg"},
+  {category:"Juice", name:"ABC Juice", price:89, type:"veg"},
+  {category:"Beverages", name:"Tea", price:29, type:"veg"},
+  {category:"Beverages", name:"Coffee", price:39, type:"veg"},
+  {category:"Beverages", name:"Hot Chocolate", price:49, type:"veg"},
+  {category:"Desserts", name:"Gulab Jamun Ice Cream", price:180, type:"veg"},
+  {category:"Desserts", name:"Brownie Ice Cream", price:180, type:"veg"},
+  {category:"Extra", name:"Toast", price:20, type:"veg"},
+  {category:"Extra", name:"Roti", price:10, type:"veg"},
+  {category:"Extra", name:"Zostel", price:350, type:"veg"},
 ];
 let cart = [];
 let catList = Array.from(new Set(menu.map(i => i.category)));
 const catNav = document.getElementById('catNav');
-const itemsList = document.getElementById('itemsList');
 catList.forEach(cat=>{
   let btn = document.createElement('button');
   btn.textContent = cat;
@@ -87,27 +121,17 @@ function filterCategory(cat) {
   document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.remove('active'));
   Array.from(catNav.children).find(btn=>btn.textContent==cat).classList.add('active');
   showItems(cat);
-  // Auto-scroll to the first item of this category
-  setTimeout(()=>{
-    let first = Array.from(itemsList.children)[0];
-    if(first) first.scrollIntoView({behavior:'smooth',block:'start'});
-  },20);
-  // Scroll horizontally so the selected category is centered comment
-  let activeBtn = Array.from(catNav.children).find(btn=>btn.textContent==cat);
-  if(activeBtn){
-    let left = activeBtn.offsetLeft - catNav.offsetWidth/2 + activeBtn.offsetWidth/2;
-    catNav.scrollTo({left:left, behavior:'smooth'});
-  }
 }
 function showItems(cat) {
+  const itemsList = document.getElementById('itemsList');
   itemsList.innerHTML = '';
   menu.filter(i => !cat || i.category == cat).forEach((item, idx)=>{
-    itemsList.innerHTML += `<div class="item-card ${item.type}" tabindex="0">
+    itemsList.innerHTML += `<div class="item-card ${item.type}">
       <div>
         <div style="font-weight:600;margin-bottom:16px;">${item.name}</div>
         <small style="color:#84745A;">${item.category} • ₹${item.price} • ${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</small>
       </div>
-      <button class="add-btn" onclick="addToCart(${menu.findIndex(m=>m==item)});event.stopPropagation()">Add</button>
+      <button class="add-btn" onclick="addToCart(${idx});event.stopPropagation()">Add</button>
     </div>`;
   });
 }
